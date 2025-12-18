@@ -193,8 +193,18 @@ class AdminBuhExportController extends ModuleAdminController
 
         foreach ($rows as $row) {
             $id = (int)$row['id'] + $offset;
-            $invoicePrefix = $this->getConfigPrefix('PS_INVOICE_PREFIX');
-            $inv = ($invoicePrefix !== '' ? $invoicePrefix . '-' : '') . (int)$row['nr'];
+            $inv = null;
+            $idInvoice = (int)Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue(
+                'SELECT id_order_invoice FROM ' . bqSQL($prefix) . 'order_invoice WHERE id_order=' . (int)$row['id'] . ' AND number=' . (int)$row['nr']
+            );
+            if ($idInvoice) {
+                $orderInvoice = new OrderInvoice($idInvoice);
+                $inv = $orderInvoice->getInvoiceNumberFormatted((int)Context::getContext()->language->id, (int)Context::getContext()->shop->id);
+            }
+            if (!$inv) {
+                $invoicePrefix = $this->getConfigPrefix('PS_INVOICE_PREFIX');
+                $inv = ($invoicePrefix !== '' ? $invoicePrefix . '-' : '') . (int)$row['nr'];
+            }
             $date = $row['date'] ?: date('Y-m-d');
             $date = date('Y-m-d', strtotime($date));
             $bepvm = (float)$row['bepvm'];
@@ -257,8 +267,10 @@ class AdminBuhExportController extends ModuleAdminController
 
         foreach ($rows as $row) {
             $id = (int)$row['id_slip'] + $offset; // Vidaus ID pagal analogiją
-            $creditPrefix = $this->getConfigPrefix('PS_CREDIT_SLIP_PREFIX');
-            $inv = ($creditPrefix !== '' ? $creditPrefix . '-' : '') . (int)$row['id_slip'];
+            $shopId = (int)Context::getContext()->shop->id;
+            $langId = (int)Context::getContext()->language->id;
+            $creditPrefix = (string)Configuration::get('PS_CREDIT_SLIP_PREFIX', $langId, null, $shopId);
+            $inv = ($creditPrefix !== '' ? $creditPrefix : '') . sprintf('%06d', (int)$row['id_slip']);
             $date = $row['date'] ?: date('Y-m-d');
             $date = date('Y-m-d', strtotime($date));
             $bepvm = (float)$row['bepvm'];
