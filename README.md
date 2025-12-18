@@ -6,7 +6,7 @@ PrestaShop 9 module to export invoices and credit slips to Pragma-compatible TXT
 - Separator: TAB (\t)
 - New lines: CRLF (\r\n)
 - First row: column headers
-- Configurable: file prefix, ID offset
+- Configurable: file prefix, separate ID offsets (invoice/credit)
 
 ## Atsisiųsti
 
@@ -20,12 +20,13 @@ Tiesioginė nuoroda (startuoja atsisiuntimas):
 1. Back Office → Modules → Module Manager → Upload a module.
 2. Įkelkite `buhexport.zip`.
 3. Meniu: Orders → Buh. eksportas.
-4. Pasirinkite datų intervalą, tipą, nustatykite „Failo prefiksą“ ir „ID poslinkį“. Spauskite „Eksportuoti“.
+4. Pasirinkite datų intervalą, tipą, nustatykite „Failo prefiksą“ ir ID poslinkius (invoice/credit). Spauskite „Eksportuoti“.
 
 ## Nustatymai
 
 - Failo prefiksas: `Configuration::get('BUHEXPORT_FILE_PREFIX')` (numatytasis `pragma_`).
-- ID poslinkis: `Configuration::get('BUHEXPORT_ID_OFFSET')` (numatytasis `9665000`).
+- Invoice ID poslinkis: `Configuration::get('BUHEXPORT_ID_OFFSET_INVOICE')` (fallback į `BUHEXPORT_ID_OFFSET`, numatytasis `9665000`).
+- Credit ID poslinkis: `Configuration::get('BUHEXPORT_ID_OFFSET_CREDIT')` (fallback į `BUHEXPORT_ID_OFFSET`, numatytasis `9665000`).
 
 ## Plėtra ir testavimas
 

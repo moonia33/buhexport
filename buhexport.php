@@ -29,6 +29,8 @@ class Buhexport extends Module
                 'AdminParentOrders'
             )
             && Configuration::updateValue('BUHEXPORT_ID_OFFSET', 9665000)
+            && Configuration::updateValue('BUHEXPORT_ID_OFFSET_INVOICE', 9665000)
+            && Configuration::updateValue('BUHEXPORT_ID_OFFSET_CREDIT', 9665000)
             && Configuration::updateValue('BUHEXPORT_FILE_PREFIX', 'pragma_');
     }
 
@@ -37,6 +39,8 @@ class Buhexport extends Module
         return $this->uninstallTab('AdminBuhExport')
             && Configuration::deleteByName('BUHEXPORT_FILE_PREFIX')
             && Configuration::deleteByName('BUHEXPORT_ID_OFFSET')
+            && Configuration::deleteByName('BUHEXPORT_ID_OFFSET_INVOICE')
+            && Configuration::deleteByName('BUHEXPORT_ID_OFFSET_CREDIT')
             && parent::uninstall();
     }
 

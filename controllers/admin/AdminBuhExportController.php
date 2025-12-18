@@ -43,10 +43,18 @@ class AdminBuhExportController extends ModuleAdminController
                     ],
                     [
                         'type' => 'text',
-                        'label' => $this->trans('Dokumento ID poslinkis', [], 'Modules.Buhexport.Admin'),
-                        'name' => 'id_offset',
+                        'label' => $this->trans('Sąskaitų (invoice) ID poslinkis', [], 'Modules.Buhexport.Admin'),
+                        'name' => 'id_offset_invoice',
                         'required' => true,
-                        'desc' => $this->trans('Skaičius, kuris pridedamas prie dokumento ID.', [], 'Modules.Buhexport.Admin'),
+                        'desc' => $this->trans('Skaičius, pridedamas prie sąskaitos vidinio ID.', [], 'Modules.Buhexport.Admin'),
+                        'suffix' => '',
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->trans('Kreditinių (credit slip) ID poslinkis', [], 'Modules.Buhexport.Admin'),
+                        'name' => 'id_offset_credit',
+                        'required' => true,
+                        'desc' => $this->trans('Skaičius, pridedamas prie kreditinės vidinio ID.', [], 'Modules.Buhexport.Admin'),
                         'suffix' => '',
                     ],
                     [
@@ -82,11 +90,19 @@ class AdminBuhExportController extends ModuleAdminController
         $helper->show_toolbar = false;
         $helper->table = $this->table;
         $helper->default_form_language = (int)Context::getContext()->language->id;
+        // Fallback logika: jei naujų reikšmių nėra, naudoti seną BUHEXPORT_ID_OFFSET
+        $fallbackOffset = Configuration::get('BUHEXPORT_ID_OFFSET', 9665000);
+        $confInv = Configuration::get('BUHEXPORT_ID_OFFSET_INVOICE');
+        $confCr = Configuration::get('BUHEXPORT_ID_OFFSET_CREDIT');
+        $offsetInvoiceDefault = ($confInv === false || $confInv === null || $confInv === '') ? (int)$fallbackOffset : (int)$confInv;
+        $offsetCreditDefault = ($confCr === false || $confCr === null || $confCr === '') ? (int)$fallbackOffset : (int)$confCr;
+
         $helper->fields_value = [
             'date_from' => Tools::getValue('date_from', date('Y-m-01', strtotime('first day of last month'))),
             'date_to'   => Tools::getValue('date_to', date('Y-m-t', strtotime('last day of last month'))),
             'file_prefix' => Tools::getValue('file_prefix', (string)Configuration::get('BUHEXPORT_FILE_PREFIX', 'pragma_')),
-            'id_offset' => Tools::getValue('id_offset', (int)Configuration::get('BUHEXPORT_ID_OFFSET', 9665000)),
+            'id_offset_invoice' => Tools::getValue('id_offset_invoice', $offsetInvoiceDefault),
+            'id_offset_credit' => Tools::getValue('id_offset_credit', $offsetCreditDefault),
             'doc_type'  => Tools::getValue('doc_type', 'invoice'),
         ];
 
@@ -100,10 +116,19 @@ class AdminBuhExportController extends ModuleAdminController
             $dateTo = Tools::getValue('date_to');
             $docType = Tools::getValue('doc_type', 'invoice');
             $filePrefix = (string)Tools::getValue('file_prefix', (string)Configuration::get('BUHEXPORT_FILE_PREFIX', 'pragma_'));
-            $idOffset = (int)Tools::getValue('id_offset', (int)Configuration::get('BUHEXPORT_ID_OFFSET', 9665000));
-            if ($idOffset < 0) { $idOffset = 0; }
+            $fallbackOffset = Configuration::get('BUHEXPORT_ID_OFFSET', 9665000);
+            $idOffsetInvoice = Tools::getValue('id_offset_invoice', Configuration::get('BUHEXPORT_ID_OFFSET_INVOICE'));
+            if ($idOffsetInvoice === false || $idOffsetInvoice === null || $idOffsetInvoice === '') { $idOffsetInvoice = $fallbackOffset; }
+            $idOffsetCredit = Tools::getValue('id_offset_credit', Configuration::get('BUHEXPORT_ID_OFFSET_CREDIT'));
+            if ($idOffsetCredit === false || $idOffsetCredit === null || $idOffsetCredit === '') { $idOffsetCredit = $fallbackOffset; }
+            $idOffsetInvoice = (int)$idOffsetInvoice;
+            $idOffsetCredit = (int)$idOffsetCredit;
+            if ($idOffsetInvoice < 0) { $idOffsetInvoice = 0; }
+            if ($idOffsetCredit < 0) { $idOffsetCredit = 0; }
             Configuration::updateValue('BUHEXPORT_FILE_PREFIX', $filePrefix);
-            Configuration::updateValue('BUHEXPORT_ID_OFFSET', $idOffset);
+            // Išsaugome naujus atskirus poslinkius
+            Configuration::updateValue('BUHEXPORT_ID_OFFSET_INVOICE', $idOffsetInvoice);
+            Configuration::updateValue('BUHEXPORT_ID_OFFSET_CREDIT', $idOffsetCredit);
 
             if (!$dateFrom || !$dateTo) {
                 $this->errors[] = $this->trans('Prašome nurodyti datų intervalą.', [], 'Modules.Buhexport.Admin');
@@ -176,7 +201,12 @@ class AdminBuhExportController extends ModuleAdminController
         $df = pSQL($dateFrom . ' 00:00:00');
         $dt = pSQL($dateTo . ' 23:59:59');
         $prefix = _DB_PREFIX_;
-        $offset = (int)Configuration::get('BUHEXPORT_ID_OFFSET', 9665000);
+        // Poslinkis sąskaitoms: naudoti naują raktą, jei nėra – seną
+        $offsetRaw = Configuration::get('BUHEXPORT_ID_OFFSET_INVOICE');
+        if ($offsetRaw === false || $offsetRaw === null || $offsetRaw === '') {
+            $offsetRaw = Configuration::get('BUHEXPORT_ID_OFFSET', 9665000);
+        }
+        $offset = (int)$offsetRaw;
         $sql = "
             SELECT o.id_order AS id, o.invoice_number AS nr, o.invoice_date AS date,
                    o.total_paid_tax_excl AS bepvm, o.total_paid_tax_incl AS supvm
@@ -248,7 +278,12 @@ class AdminBuhExportController extends ModuleAdminController
         $df = pSQL($dateFrom . ' 00:00:00');
         $dt = pSQL($dateTo . ' 23:59:59');
         $prefix = _DB_PREFIX_;
-        $offset = (int)Configuration::get('BUHEXPORT_ID_OFFSET', 9665000);
+        // Poslinkis kreditinėms: naudoti naują raktą, jei nėra – seną
+        $offsetRaw = Configuration::get('BUHEXPORT_ID_OFFSET_CREDIT');
+        if ($offsetRaw === false || $offsetRaw === null || $offsetRaw === '') {
+            $offsetRaw = Configuration::get('BUHEXPORT_ID_OFFSET', 9665000);
+        }
+        $offset = (int)$offsetRaw;
 
         // Bandoma apimti dažniausiai naudojamus stulpelius (total_products_tax_excl/incl). Jei jų nėra, sumažins reikšmes į 0.
         $sql = "
