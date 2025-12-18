@@ -193,8 +193,7 @@ class AdminBuhExportController extends ModuleAdminController
 
         foreach ($rows as $row) {
             $id = (int)$row['id'] + $offset;
-            $idShop = (int)Context::getContext()->shop->id;
-            $invoicePrefix = (string)Configuration::get('PS_INVOICE_PREFIX', null, null, $idShop);
+            $invoicePrefix = $this->getConfigPrefix('PS_INVOICE_PREFIX');
             $inv = ($invoicePrefix !== '' ? $invoicePrefix . '-' : '') . (int)$row['nr'];
             $date = $row['date'] ?: date('Y-m-d');
             $date = date('Y-m-d', strtotime($date));
@@ -258,8 +257,7 @@ class AdminBuhExportController extends ModuleAdminController
 
         foreach ($rows as $row) {
             $id = (int)$row['id_slip'] + $offset; // Vidaus ID pagal analogiją
-            $idShop = (int)Context::getContext()->shop->id;
-            $creditPrefix = (string)Configuration::get('PS_CREDIT_SLIP_PREFIX', null, null, $idShop);
+            $creditPrefix = $this->getConfigPrefix('PS_CREDIT_SLIP_PREFIX');
             $inv = ($creditPrefix !== '' ? $creditPrefix . '-' : '') . (int)$row['id_slip'];
             $date = $row['date'] ?: date('Y-m-d');
             $date = date('Y-m-d', strtotime($date));
@@ -317,5 +315,15 @@ class AdminBuhExportController extends ModuleAdminController
     protected function fmt($number)
     {
         return number_format((float)$number, 2, '.', '');
+    }
+
+    protected function getConfigPrefix($key)
+    {
+        $prefix = (string)Configuration::get($key);
+        if ($prefix === '' || $prefix === null) {
+            $shopId = (int)Context::getContext()->shop->id;
+            $prefix = (string)Configuration::get($key, null, null, $shopId);
+        }
+        return trim((string)$prefix);
     }
 }
