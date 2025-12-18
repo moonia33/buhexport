@@ -10,10 +10,9 @@ PrestaShop 9 module to export invoices and credit slips to Pragma-compatible TXT
 
 ## Atsisiųsti
 
-[![Download buhexport.zip](https://img.shields.io/badge/DOWNLOAD-buhexport.zip-brightgreen)](https://raw.githubusercontent.com/moonia33/buhexport/main/dist/buhexport.zip)
+[![Download buhexport.zip](https://img.shields.io/badge/DOWNLOAD-buhexport.zip-brightgreen)](dist/buhexport.zip)
 
-Tiesioginė nuoroda (startuoja atsisiuntimas):
-[https://raw.githubusercontent.com/moonia33/buhexport/main/dist/buhexport.zip](https://raw.githubusercontent.com/moonia33/buhexport/main/dist/buhexport.zip)
+Arba tiesioginė nuoroda: [Download buhexport.zip (latest build)](dist/buhexport.zip)
 
 ## Įdiegimas
 
@@ -37,7 +36,8 @@ Tiesioginė nuoroda (startuoja atsisiuntimas):
 cd modules/buhexport
 rm -f dist/buhexport.zip
 mkdir -p dist
-scripts/build-zip.sh
+zip -r dist/buhexport.zip . \
+    -x "dist/*" "cache/*" "vendor/*" "*.git*"
 ```
 
 ## Licencija
