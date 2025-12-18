@@ -193,7 +193,8 @@ class AdminBuhExportController extends ModuleAdminController
 
         foreach ($rows as $row) {
             $id = (int)$row['id'] + $offset;
-            $inv = 'SXL-' . (int)$row['nr'];
+            $invoicePrefix = (string)Configuration::get('PS_INVOICE_PREFIX', '');
+            $inv = ($invoicePrefix !== '' ? $invoicePrefix . '-' : '') . (int)$row['nr'];
             $date = $row['date'] ?: date('Y-m-d');
             $date = date('Y-m-d', strtotime($date));
             $bepvm = (float)$row['bepvm'];
@@ -256,7 +257,8 @@ class AdminBuhExportController extends ModuleAdminController
 
         foreach ($rows as $row) {
             $id = (int)$row['id_slip'] + $offset; // Vidaus ID pagal analogiją
-            $inv = 'SXL-KR-' . (int)$row['id_slip'];
+            $creditPrefix = (string)Configuration::get('PS_CREDIT_SLIP_PREFIX', '');
+            $inv = ($creditPrefix !== '' ? $creditPrefix . '-' : '') . (int)$row['id_slip'];
             $date = $row['date'] ?: date('Y-m-d');
             $date = date('Y-m-d', strtotime($date));
             $bepvm = (float)$row['bepvm'];
