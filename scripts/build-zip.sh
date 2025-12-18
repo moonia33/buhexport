@@ -19,6 +19,7 @@ rsync -a --delete \
   "$ROOT_DIR/" "$PKG_DIR/buhexport/"
 
 cd "$PKG_DIR"
+rm -f "$DIST_DIR/buhexport.zip"
 zip -r "$DIST_DIR/buhexport.zip" buhexport
 
 echo "Built: $DIST_DIR/buhexport.zip"
